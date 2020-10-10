@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>中文罗盘时钟</title>
+  <style lang="">
+    * {
+    margin: 0;
+    padding: 0;
+    /* background: #669; */
+    /* background-color: black; */
+
+    }
+
+    html,
+    body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: black;
+    }
+    #clock {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    /* background-image:
+    url('https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1602238291413&di=7d0f2fea340af3c7c83582d477c0bf78&imgtype=0&src=http%3A%2F%2Fattach.bbs.miui.com%2Fforum%2F201303%2F01%2F191002ehoy61ll1q6y1rp6.jpg');
+    background-size: 100% 100%; */
+    }
+
+    .label {
+    display: inline-block;
+    text-align: center;
+    padding: 5px 5px;
+    font-size: 20px;
+    font-family: 楷体;
+    transition: left 1s, top 1s;
+    /* transform-origin 属性允许您改变被转换元素的位置。 */
+    transform-origin: 0 0;
+    color: white;
+    }
+  </style>
+</head>
+<body>
+  <div id='clock'></div>
+  <script>
+    let monthText = ["一  月", "二  月", "三  月", "四  月", "五  月", "六  月", "七  月", "八  月", "九  月", "十  月", "十一月", "十二月"];
+    let dayText = ["一号", "二号", "三号", "四号", "五号", "六号", "七号", "八号", "九号", "十号", "十一号", "十二号", "十三号", "十四号", "十五号", "十六号", "十七号", "十八号", "十九号", "二十号", "二十一号", "二十二号", "二十三号", "二十四号", "二十五号", "二十六号", "二十七号", "二十八号", "二十九号", "三十号", "三十一号"];
+    let weekText = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+    let hourText = ["零点", "一点", "两点", "三点", "四点", "五点", "六点", "七点", "八点", "九点", "十点", "十一点", "十二点", "十三点", "十四点", "十五点", "十六点", "十七点", "十八点", "十九点", "二十点", "二十一点", "二十二点", "二十三点"];
+    let minuteText = ["一分", "二分", "三分", "四分", "五分", "六分", "七分", "八分", "九分", "十分",
+  "十一分", "十二分", "十三分", "十四分", "十五分", "十六分", "十七分", "十八分", "十九分", "二十分",
+  "二十一分", "二十二分", "二十三分", "二十四分", "二十五分", "二十六分", "二十七分", "二十八分", "二十九分", "三十分",
+  "三十一分", "三十二分", "三十三分", "三十四分", "三十五分", "三十六分", "三十七分", "三十八分", "三十九分", "四十分",
+  "四十一分", "四十二分", "四十三分", "四十四分", "四十五分", "四十六分", "四十七分", "四十八分", "四十九分", "五十分",
+  "五十一分", "五十二分", "五十三分", "五十四分", "五十五分", "五十六分", "五十七分", "五十八分", "五十九分", "六十分"
+];
+  let secondText = ["一秒", "二秒", "三秒", "四秒", "五秒", "六秒", "七秒", "八秒", "九秒", "十秒",
+  "十一秒", "十二秒", "十三秒", "十四秒", "十五秒", "十六秒", "十七秒", "十八秒", "十九秒", "二十秒",
+  "二十一秒", "二十二秒", "二十三秒", "二十四秒", "二十五秒", "二十六秒", "二十七秒", "二十八秒", "二十九秒", "三十秒",
+  "三十一秒", "三十二秒", "三十三秒", "三十四秒", "三十五秒", "三十六秒", "三十七秒", "三十八秒", "三十九秒", "四十秒",
+  "四十一秒", "四十二秒", "四十三秒", "四十四秒", "四十五秒", "四十六秒", "四十七秒", "四十八秒", "四十九秒", "五十秒",
+  "五十一秒", "五十二秒", "五十三秒", "五十四秒", "五十五秒", "五十六秒", "五十七秒", "五十八秒", "五十九秒", "六十秒"
+];
+
+// 存放DOM元素
+let monthList = [];
+let dayList = [];
+let weekList = [];
+let hourList = [];
+let minuteList = [];
+let secondList = [];
+//  定义三维数组 存放文字内容及页面显示标签
+let timeTextSet = [
+  [monthText, monthList],
+  [dayText, dayList],
+  [weekText, weekList],
+  [hourText, hourList],
+  [minuteText, minuteList],
+  [secondText, secondList]
+];
+// 是否旋转
+let isRotating = false;
+// 时钟页面
+let clock;
+window.onload = function () {
+  init();
+  
+  // 获取当前时间
+  setInterval(() => {
+    runTime();
+  }, 300);
+
+  // 旋转之前定位到当前时间
+  locateCurrent();
+  // 3秒之后开始旋转
+  setTimeout(() => {
+    toRotate();
+  }, 2000);
+}
+// 初始化函数
+function init() {
+  // 获取元素
+  clock = document.getElementById('clock');
+  // 生成标签 存放文字展示
+  for (let i = 0; i < timeTextSet.length; i++) {
+    for (let j = 0; j < timeTextSet[i][0].length; j++) {
+      let temp = creatLabel(timeTextSet[i][0][j]);
+      clock.appendChild(temp);
+      // 将生成的标签存放在数组list中
+      timeTextSet[i][1].push(temp);
+    }
+  }
+
+
+}
+
+// 创建标签 并将文字填充到标签内 接收参数为文字内容
+function creatLabel(text) {
+  // 创建div
+  let div = document.createElement('div');
+  // 增添div样式
+  div.classList.add('label');
+  // 给div填充内容
+  div.innerText = text;
+  return div;
+}
+
+// 获取当前时间
+function runTime() {
+  let now = new Date();
+  let month = now.getMonth();//9 对应月数组里面索引值9 也就是10月
+  let day = now.getDate();//9 对应日数组里面索引值9 也就是10号   比今天大一天 所以减一
+  let week = now.getDay();
+  let hour = now.getHours();
+  let minute = now.getMinutes();
+  let second = now.getSeconds();
+  let nowTime = [month,day-1,week,hour,minute,second]
+  // console.log(nowTime);//[10, 9, 5, 13, 43, 16]
+  // 清楚样式
+  initStyle();
+  // 给当前时间添加样式
+  for(let i = 0; i < nowTime.length;i++){
+    let num = nowTime[i]; //nowTime[0] num=9;
+    // timeTextSet[0][1][9] 对应三维数组里面的月数组的索引为9的值 也就是10月 
+    //  i=1  nowTime[1] num=9;
+    //  timeTextSet[1][1][9] 对应三维数组里面的日数组的索引为9的值 也就是10日 所以需要减一
+    timeTextSet[i][1][num].style.color = 'red';
+  }
+  // 变成旋转时钟
+  if(isRotating){
+    // 获取圆心位置
+    /* 
+    网页可见区域宽：document.body.clientWidth
+    网页可见区域高：document.body.clientHeight
+    网页可见区域宽：document.body.offsetWidth (包括边线的宽)
+    网页可见区域高：document.body.offsetHeight (包括边线的宽)
+    网页正文全文宽：document.body.scrollWidth
+    网页正文全文高：document.body.scrollHeight
+    */
+    let widthMid = document.body.clientWidth / 2;
+    let heightMid = document.body.clientHeight / 2;
+     
+    // 将每个dom元素确定到圆的位置
+    // 依次循环月 日 星期 时 分 秒
+    for(let i = 0; i < timeTextSet.length; i++){
+      // 循环月,月长度12;循环日,日长度31;循环周,周长度;循环时,时长度24;循环分,分长度60;循环秒,秒长度60;
+      for (let j = 0; j < timeTextSet[i][0].length; j++){
+        // 计算处每一个元素的位置  x y坐标 圆的半径和时分秒位置有关系
+        // 设定月 日 周 时 分 秒 圆半径
+        // 月半径 35  日半径 120 周半径 3*35+2*50 以此类推
+        let r = (1 + i) * 35 + 50 * i;
+        // 计算每一个平均的角度 将没有给单位对齐 再转化成弧度
+        /* 
+          如:计算月 nowTime[i]是目前的时间 
+          deg = 360 / 12 * (0-9) = -270
+          deg = 360 / 12 * (1-9) = -240
+          deg = 360 / 12 * (2-9) = -210
+          ...
+          deg = 360 / 12 * (9-9) = 0
+          deg = 360 / 12 * (10-9) = 30
+          deg = 360 / 12 * (11-9) = 60
+          计算日
+          deg = 360 / 31 * (0-9)
+        */
+        let deg = 360 / timeTextSet[i][1].length * (j -nowTime[i]);
+        // 计算dom元素的坐标 
+        // Math.PI = 圆周率Π
+        // 角度和弧度转换公式
+        // 角度 = 弧度 * 180 / PI
+        // 弧度 = 角度 * PI / 180
+        let x = r * Math.sin(deg * Math.PI / 180) + widthMid;
+        let y = heightMid - r * Math.cos(deg * Math.PI / 180);
+        // console.log(x,y);
+        // 样式
+        let temp = timeTextSet[i][1][j];
+        temp.style.transform = 'rotate(' + (-90 +deg) + 'deg)';
+        temp.style.left = x + 'px';
+        temp.style.top = y + 'px';
+      }
+    }
+  }
+}
+// runTime();
+function initStyle() {
+  let labels = document.getElementsByClassName('label');
+  for(let i = 0; i < labels.length; i++){
+    labels[i].style.color = 'white';
+  }
+}
+function locateCurrent() {
+  for(let i = 0; i < timeTextSet.length;i++){
+    for(let j = 0; j < timeTextSet[i][1].length;j++){
+      // 获取原来的位置 修改position  设置left 和 top
+      let tempX = timeTextSet[i][1][j].offsetLeft + 'px';
+      let tempY = timeTextSet[i][1][j].offsetTop + 'px';
+      // 利用定时器 修改position
+      setTimeout(() => {
+        timeTextSet[i][1][j].style.position = "absolute";
+        timeTextSet[i][1][j].style.left = tempX;
+        timeTextSet[i][1][j].style.top = tempY;
+      }, 50);
+    }
+  }
+}
+function toRotate() {
+  isRotating = true;
+  clock.style.transform = 'rotate(90deg)';
+}
+
+
+  </script>
+</body>
+</html>
